@@ -4,6 +4,10 @@ import numpy as np
 from lag_features import *
 from imputing_functions import *
 
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import r2_score
+
 def apply_calc(df_,calculations):
     for key, value in calculations.items():
         if 'gb_list' in value:
@@ -54,10 +58,10 @@ def date_features(df, col):
     df['month'] = df[col].dt.month
     df['day'] = df[col].dt.day
     df['year'] = df[col].dt.year
-
-    df['year_month'] = [ str(y)+'_'+str(m) if m < 10 else str(y)+'_0'+str(m) for y, m in zip(df['year'], df['month']) ]
+    df['FL_DATE_quarter'] = df['FL_DATE'].dt.quarter
     df['weekday'] = df[col].dt.weekday
-
+    df['year_month'] = [ str(y)+'_'+str(m) if m < 10 else str(y)+'_0'+str(m) for y, m in zip(df['year'], df['month']) ]
+    
     return df
 
 
@@ -67,3 +71,29 @@ def delete_time_features(df):
         del df[col]
         
     return(df)
+
+
+def model_metrics(X_train, y_train, X_test, y_test, model):
+
+    y_train_pred = model.predict(X_train)
+    y_test_pred = model.predict(X_test)
+    
+    train_rmse = mean_squared_error(y_train, y_train_pred, squared=False)
+    test_rmse = mean_squared_error(y_test, y_test_pred, squared=False)
+    
+    train_mae = mean_absolute_error(y_train, y_train_pred)
+    test_mae = mean_absolute_error(y_test, y_test_pred)
+
+    train_r2 = r2_score(y_train, y_train_pred)
+    test_r2 = r2_score(y_test, y_test_pred)
+
+    print(' --- TRAIN --- ')
+    print('     - RMSE: ', train_rmse)
+    print('     - MAE: ', train_mae)
+    print('     - R2: ', train_r2)
+    print(' --- TEST --- ')
+    print('     - RMSE: ', test_rmse)
+    print('     - MAE: ', test_mae)
+    print('     - R2: ', test_r2)
+
+    return train_rmse, test_rmse, train_mae, test_mae, train_r2, train_r2
